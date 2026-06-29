@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Weather Tracker</title>
+    
+    <!-- Leaflet.js CSS for World Map Styling -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+        }
+        
+        body { 
+            background: #0f172a; 
+            color: #f8fafc; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            padding: 20px;
+            position: relative;
+        }
+
+        /* Responsive Dashboard Grid Container */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+            width: 100%;
+            max-width: 1000px;
+            background: #1e293b;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            border: 1px solid #334155;
+        }
+
+        /* Left Control Panel Styling */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+
+        h1 { 
+            font-size: 1.6rem; 
+            margin-bottom: 20px; 
+            color: #38bdf8; 
+        }
+
+        .search-box { 
+            display: flex; 
+            gap: 10px; 
+            margin-bottom: 25px; 
+        }
+
+        input { 
+            flex: 1; 
+            padding: 12px; 
+            border: none; 
+            border-radius: 8px; 
+            background: #334155; 
+            color: white; 
+            font-size: 1rem; 
+            border: 1px solid #475569;
+        }
+
+        input:focus { 
+            outline: 2px solid #38bdf8; 
+        }
+
+        button { 
+            background: #38bdf8; 
+            color: #0f172a; 
+            border: none; 
+            padding: 12px 20px; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            transition: 0.2s ease; 
+        }
+
+        button:hover { 
+            background: #7dd3fc; 
+            transform: translateY(-1px);
+        }
+
+        .weather-info { 
+            margin-top: 10px; 
+            background: #0f172a;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            text-align: center;
+        }
+
+        .city { 
+            font-size: 1.3rem; 
+            font-weight: 600; 
+            color: #f8fafc;
+        }
+
+        .temp { 
+            font-size: 3.5rem; 
+            font-weight: bold; 
+            margin: 10px 0; 
+            color: #f59e0b; 
+        }
+
+        .desc { 
+            text-transform: capitalize; 
+            color: #94a3b8; 
+            font-size: 1.1rem; 
+        }
+
+        .error { 
+            color: #f87171; 
+            margin-top: 15px; 
+            display: none; 
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        /* Right Map Panel Styling */
+        #map-container {
+            width: 100%;
+            height: 450px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #334155;
+            z-index: 1;
+        }
+
+        /* Clean Right-Bottom Floating Footer Info */
+        .footer-signature {
+            position: absolute;
+            bottom: 15px;
+            right: 20px;
+            font-size: 0.8rem;
+            color: #64748b;
+            text-align: right;
+            line-height: 1.4;
+            background: rgba(15, 23, 42, 0.8);
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #334155;
+            pointer-events: none;
+        }
+        .footer-signature span {
+            color: #38bdf8;
+            font-weight: 600;
+        }
+
+        /* Responsive Breakpoint for Mobile/Small Screens */
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            #map-container {
+                height: 300px;
+            }
+            body {
+                padding-bottom: 60px; /* Space for absolute signature */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard">
+        <!-- Left Side: Weather Search & Readout -->
+        <div class="controls">
+            <h1>Global Weather Monitor</h1>
+            <div class="search-box">
+                <input type="text" id="city-input" placeholder="Type a city (e.g., Colombo)..." value="London">
+                <button onclick="getWeather()">Search</button>
+            </div>
+            
+            <div class="weather-info" id="weather-layout">
+                <div class="city" id="city-name">London, GB</div>
+                <div class="temp" id="temperature">--°C</div>
+                <div class="desc" id="description">Search a city to update</div>
+            </div>
+
+            <div class="error" id="error-message">City not found. Please check spelling.</div>
+        </div>
+
+        <!-- Right Side: Interactive Leaflet Map Mapping -->
+        <div id="map-container"></div>
+    </div>
+
+    <!-- Creator Professional Signature Placement -->
+    <div class="footer-signature">
+        Created by: <span>Manula Gunawardhana</span><br>
+        0715853234 | manula2481@gmail.com
+    </div>
+
+    <!-- Leaflet JS Library Core Injection -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <script>
+        // Global Map Variables
+        let map;
+        let marker;
+
+        // Initialize Map centered on global view default
+        function initMap() {
+            map = L.map('map-container').setView([20, 0], 2); // Initial worldwide zoom
+
+            // Add dark mode styled map tiles using CartoDB Voyager template
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+        }
+
+        async function getWeather() {
+            const city = document.getElementById('city-input').value.trim();
+            const errorMessage = document.getElementById('error-message');
+
+            if (!city) return;
+            errorMessage.style.display = 'none';
+
+            try {
+                // 1. Geocoding API Step: Turn the input name into Lat/Long coordinates
+                const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1&language=en&format=json`);
+                const geoData = await geoRes.json();
+
+                if (!geoData.results || geoData.results.length === 0) {
+                    throw new Error("City not found");
+                }
+
+                const { latitude, longitude, name, country } = geoData.results[0];
+                
+                // 2. Weather Fetch Step using coordinates
+                const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`);
+                const weatherData = await weatherRes.json();
+                
+                const temp = Math.round(weatherData.current_weather.temperature);
+                const weatherCode = weatherData.current_weather.weathercode;
+
+                // Decode common Open-Meteo structural weather codes 
+                let description = "Clear Skies";
+                if (weatherCode > 0 && weatherCode <= 3) description = "Partly Cloudy";
+                if (weatherCode >= 45 && weatherCode <= 48) description = "Foggy Conditions";
+                if (weatherCode >= 51 && weatherCode <= 67) description = "Rainy/Showers";
+                if (weatherCode >= 71 && weatherCode <= 77) description = "Snowfall";
+                if (weatherCode >= 95) description = "Thunderstorms";
+
+                // Update text displays
+                document.getElementById('city-name').innerText = `${name}, ${country}`;
+                document.getElementById('temperature').innerText = `${temp}°C`;
+                document.getElementById('description').innerText = description;
+
+                // 3. Map Control Action: Pan to city location & fly marker down
+                map.flyTo([latitude, longitude], 10, { animate: true, duration: 1.5 });
+                
+                if (marker) {
+                    marker.setLatLng([latitude, longitude]);
+                } else {
+                    marker = L.marker([latitude, longitude]).addTo(map);
+                }
+                marker.bindPopup(`<b>${name}</b><br>${temp}°C - ${description}`).openPopup();
+
+            } catch (err) {
+                console.error(err);
+                errorMessage.style.display = 'block';
+            }
+        }
+
+        // Run map build setup immediately upon loading window frames
+        window.onload = () => {
+            initMap();
+            getWeather(); // Run default initial load value
+        };
+    </script>
+</body>
+</html>
