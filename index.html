@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Weather Tracker</title>
+    <title>Live Weather Tracker By Manula</title>
     
     <!-- Leaflet.js CSS for World Map Styling -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
@@ -120,7 +121,7 @@
         }
 
         .error { 
-            color: #f87171; 
+            color: #ff0000; 
             margin-top: 15px; 
             display: none; 
             text-align: center;
@@ -146,7 +147,7 @@
             color: #64748b;
             text-align: right;
             line-height: 1.4;
-            background: rgba(15, 23, 42, 0.8);
+            background: rgba(0, 0, 0, 0.8);
             padding: 6px 12px;
             border-radius: 6px;
             border: 1px solid #334155;
@@ -178,7 +179,7 @@
         <div class="controls">
             <h1>Global Weather Monitor</h1>
             <div class="search-box">
-                <input type="text" id="city-input" placeholder="Type a city (e.g., Colombo)..." value="London">
+                <input type="text" id="city-input" placeholder="Type a city (e.g., Colombo)..." value="Colombo">
                 <button onclick="getWeather()">Search</button>
             </div>
             
@@ -211,7 +212,12 @@
 
         // Initialize Map centered on global view default
         function initMap() {
-            map = L.map('map-container').setView([20, 0], 2); // Initial worldwide zoom
+            // Added explicit options to ensure buttons, scrolling (mouse wheel), and pinching (touchpad) work smoothly
+            map = L.map('map-container', {
+                scrollWheelZoom: true,
+                zoomControl: true,
+                touchZoom: true
+            }).setView([20, 0], 2); 
 
             // Add dark mode styled map tiles using CartoDB Voyager template
             L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
@@ -277,7 +283,16 @@
         window.onload = () => {
             initMap();
             getWeather(); // Run default initial load value
+
+            // Feature: Listen for the "Enter" key inside the search box
+            document.getElementById('city-input').addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    getWeather();
+                }
+            });
         };
     </script>
 </body>
 </html>
+
+```
